@@ -1,47 +1,78 @@
 # 👁️ Vision Education Chatbot
+### An LLM-Powered Clinical Decision-Support Prototype for Blurry Vision Triage
 
-A Streamlit-based educational chatbot that guides users experiencing blurry vision through a structured symptom intake process and provides safe, non-diagnostic next-step recommendations.
+The Vision Education Chatbot is a Streamlit-based educational application that simulates how an eye care professional gathers symptom information from a patient presenting with blurry vision.
 
-The system combines a Large Language Model (LLM) for natural language understanding with deterministic safety guardrails to ensure urgent warning signs are always escalated appropriately.
+The system combines:
 
----
+- **Large Language Models (LLMs)** for natural language understanding
+- **Deterministic safety guardrails** for urgent symptom detection
+- **Structured clinical reasoning**
+- **A modern Streamlit user interface**
 
-## 🎯 Project Overview
-
-This project simulates a basic vision triage assistant for patients who report blurry near or distance vision.
-
-Users describe their symptoms in natural language, and the system:
-
-1. Uses an LLM to extract structured clinical information.
-2. Detects safety-critical warning signs.
-3. Provides educational guidance.
-4. Recommends either routine eye care or urgent evaluation.
-
-The chatbot is intended for educational purposes only and does not provide medical diagnosis.
+This project demonstrates how artificial intelligence can be used to build safe, explainable healthcare decision-support tools.
 
 ---
 
-## 🤖 LLM Integration
+## 🎯 Project Motivation
 
-Based on instructor feedback, the original rule-based prototype was upgraded to include OpenAI-powered symptom interpretation.
+Patients frequently describe vision problems using free text, such as:
 
-The `llm_utils.py` module sends the user's free-text description to an LLM and returns structured JSON with:
+> “My distance vision has been blurry for a few weeks.”
 
-- Blur type (`near`, `distance`, `unknown`)
-- Eye involvement (`one eye`, `both eyes`, `unknown`)
-- Onset (`suddenly`, `gradually`, `unknown`)
-- Red flags (`pain`, `flashes`, `floaters`)
-- Urgency (`routine`, `urgent`)
-- Plain-language educational explanation
+> “I suddenly noticed flashes and floaters in one eye.”
 
-### Example LLM Output
+Interpreting these descriptions requires extracting clinically relevant features such as:
 
-```json
-{
-  "blur_type": "distance",
-  "eye": "unknown",
-  "onset": "unknown",
-  "red_flags": ["flashes"],
-  "urgency": "urgent",
-  "explanation": "Flashes can be a warning sign and should be evaluated urgently."
-}
+- Whether blur is worse at near or distance
+- Whether one or both eyes are affected
+- Whether symptoms began suddenly or gradually
+- Whether urgent warning signs are present
+
+This project automates that process using an LLM while preserving strict safety rules.
+
+---
+
+## ❓ Problem Statement
+
+Develop a healthcare chatbot that can:
+
+1. Accept free-text descriptions of blurry vision.
+2. Extract structured symptom information.
+3. Detect urgent red flags.
+4. Provide educational guidance.
+5. Recommend routine or urgent follow-up.
+6. Clearly communicate that the system is **not a medical diagnosis**.
+
+---
+
+## 🧠 System Overview
+
+The application follows a hybrid architecture:
+
+1. **User enters symptoms in natural language**
+2. **LLM extracts structured clinical information**
+3. **Safety guardrails validate urgent symptoms**
+4. **Educational recommendations are generated**
+5. **Results are displayed in Streamlit**
+
+This design combines the flexibility of LLMs with the reliability of deterministic clinical safety logic.
+
+---
+
+## 🏗️ System Architecture
+
+```text
+User Input
+    ↓
+Streamlit Interface (ui.py)
+    ↓
+LLM Symptom Extraction (llm_utils.py)
+    ↓
+Structured JSON Output
+    ↓
+Safety Guardrails
+    ↓
+Educational Recommendation
+    ↓
+Rendered Clinical Summary
