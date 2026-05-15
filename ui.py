@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+from llm_utils import analyze_vision_symptoms
 
 # =========================================================
 # PAGE CONFIG
@@ -276,17 +277,8 @@ st.markdown("""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if "stage" not in st.session_state:
-    st.session_state.stage = "idle"
-
 if "consent_given" not in st.session_state:
     st.session_state.consent_given = False
-
-if "case" not in st.session_state:
-    st.session_state.case = {"blur_type": None, "eye": None, "onset": None}
-
-if "last_processed_index" not in st.session_state:
-    st.session_state.last_processed_index = -1
 
 if "conversation_closed" not in st.session_state:
     st.session_state.conversation_closed = False
@@ -296,17 +288,7 @@ def add_message(role, content):
 
 def reset_chat():
     st.session_state.messages = []
-    st.session_state.stage = "idle"
-    st.session_state.case = {"blur_type": None, "eye": None, "onset": None}
-    st.session_state.last_processed_index = -1
     st.session_state.conversation_closed = False
-
-def progress_value():
-    filled = sum(1 for v in st.session_state.case.values() if v is not None)
-    return filled / 3
-
-def render_case_value(v):
-    return v if v else "Waiting..."
 
 def result_card(title, urgency, guidance, action, style="low"):
     tag_class = {
@@ -323,14 +305,33 @@ def result_card(title, urgency, guidance, action, style="low"):
             <b>Educational guidance:</b> {guidance}
         </div>
         <div style="margin-top:0.45rem; color:#29475e; line-height:1.6;">
-            <b>Recommended action:</b> {action}</div>
+            <b>Recommended action:</b> {action}
+        </div>
+    </div>
+    """
+
+def render_llm_summary(analysis):
+    blur_type = analysis.get("blur_type", "unknown")
+    eye = analysis.get("eye", "unknown")
+    onset = analysis.get("onset", "unknown")
+    red_flags = analysis.get("red_flags", [])
+    urgency = analysis.get("urgency", "unknown")
+
+    return f"""
+    <div class="summary-card">
+        <div class="summary-title">LLM symptom extraction</div>
+        <div class="summary-line"><b>Blur type:</b> {blur_type}</div>
+        <div class="summary-line"><b>Eye involvement:</b> {eye}</div>
+        <div class="summary-line"><b>Onset:</b> {onset}</div>
+        <div class="summary-line"><b>Red flags:</b> {red_flags}</div>
+        <div class="summary-line"><b>Urgency:</b> {urgency}</div>
     </div>
     """
 
 # =========================================================
 # TOP HEADER
 # =========================================================
-st.markdown(f"""
+st.markdown("""
 <div class="topbar">
     <div class="brand-row">
         <div class="brand-left">
@@ -338,11 +339,11 @@ st.markdown(f"""
             <div>
                 <div class="brand-title">Vision Chatbot</div>
                 <div class="brand-subtitle">
-                    A polished, safety-aware chatbot for blurry vision guidance
+                    LLM-powered symptom intake with safety guardrails
                 </div>
             </div>
         </div>
-        <div class="top-badge">Live symptom intake · Educational use only</div>
+        <div class="top-badge">LLM symptom extraction · Educational use only</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -358,43 +359,35 @@ left_col, right_col = st.columns([1, 2.2], gap="large")
 with left_col:
     st.markdown('<div class="panel">', unsafe_allow_html=True)
 
-    st.markdown('<div class="panel-title">Case Tracker</div>', unsafe_allow_html=True)
-    st.progress(progress_value())
-
-    st.markdown(f"""
+    st.markdown('<div class="panel-title">System Type</div>', unsafe_allow_html=True)
+    st.markdown("""
     <div class="metric-card">
-        <div class="metric-label">Blur type</div>
-        <div class="metric-value">{render_case_value(st.session_state.case["blur_type"])}</div>
+        <div class="metric-label">Architecture</div>
+        <div class="metric-value">LLM + Safety Rules</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
+    st.markdown("""
     <div class="metric-card">
-        <div class="metric-label">Affected eye(s)</div>
-        <div class="metric-value">{render_case_value(st.session_state.case["eye"])}</div>
+        <div class="metric-label">LLM Module</div>
+        <div class="metric-value">llm_utils.py</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Onset</div>
-        <div class="metric-value">{render_case_value(st.session_state.case["onset"])}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="panel-title">What this checks</div>', unsafe_allow_html=True)
+    st.markdown('<div class="panel-title">What the LLM extracts</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="mini-note">
         • Near vs distance blur<br>
         • One eye vs both eyes<br>
         • Sudden vs gradual onset<br>
-        • Pain, flashes, and floaters
+        • Pain, flashes, and floaters<br>
+        • Urgency level
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("""
     <div class="safety-banner">
-        <b>Safety note:</b> sudden vision change, eye pain, flashes, or floaters may need urgent in-person eye care.
+        <b>Safety guardrails:</b> pain, flashes, floaters, or sudden onset still trigger urgent-care guidance.
     </div>
     """, unsafe_allow_html=True)
 
@@ -419,9 +412,9 @@ with right_col:
 
     st.markdown("""
     <div class="chat-header">
-        <div class="chat-header-title">Start with a symptom, not a blank page</div>
+        <div class="chat-header-title">Describe your vision concern naturally</div>
         <div class="chat-header-sub">
-            Use the quick options below or type your symptoms normally.
+            The LLM extracts structured intake information from your message.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -436,35 +429,12 @@ with right_col:
         st.markdown('</div>', unsafe_allow_html=True)
         st.stop()
 
-    # Hide quick buttons after conversation closes
-    if not st.session_state.conversation_closed:
-        st.markdown('<div class="quick-chip-label">Quick symptom starters</div>', unsafe_allow_html=True)
-        q1, q2, q3, q4 = st.columns(4)
-
-        if q1.button("👓 Near blur", use_container_width=True):
-            add_message("user", "My blur is worse for near")
-            st.rerun()
-
-        if q2.button("🚘 Distance blur", use_container_width=True):
-            add_message("user", "My blur is worse for distance")
-            st.rerun()
-
-        if q3.button("⚠️ Pain / flashes", use_container_width=True):
-            add_message("user", "I have flashes and pain")
-            st.rerun()
-
-        if q4.button("👁️ One eye", use_container_width=True):
-            add_message("user", "It affects one eye")
-            st.rerun()
-
-        st.markdown("###")
-
     if len(st.session_state.messages) == 0:
         st.markdown("""
         <div class="summary-card">
             <div class="summary-title">How to use</div>
-            <div class="summary-line">Start with near blur, distance blur, or another symptom.</div>
-            <div class="summary-line">The chatbot will guide the intake and then provide educational guidance.</div>
+            <div class="summary-line">Type your symptoms in natural language.</div>
+            <div class="summary-line">Example: “My distance vision is blurry and I see flashes.”</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -472,7 +442,6 @@ with right_col:
         with st.chat_message(m["role"]):
             st.markdown(m["content"], unsafe_allow_html=True)
 
-    # Only show chat input when conversation is still active
     user_text = None
     if not st.session_state.conversation_closed:
         user_text = st.chat_input("Describe your vision problem...")
@@ -481,140 +450,60 @@ with right_col:
 
     if user_text:
         add_message("user", user_text)
-
-    latest_index = len(st.session_state.messages) - 1
-    if (
-        latest_index >= 0
-        and latest_index != st.session_state.last_processed_index
-        and st.session_state.messages[-1]["role"] == "user"
-    ):
-        st.session_state.last_processed_index = latest_index
-        msg = st.session_state.messages[-1]["content"].lower().strip()
+        msg = user_text.lower().strip()
 
         greetings = ["hi", "hello", "hey"]
         thanks = ["thank you", "thanks", "thx"]
 
+        if any(g == msg for g in greetings):
+            response = (
+                "Hi — describe your vision concern in a sentence. "
+                "For example: **My near vision is blurry**."
+            )
+            add_message("assistant", response)
+            st.rerun()
+
+        if any(t in msg for t in thanks):
+            response = "You’re welcome. This conversation is now complete."
+            add_message("assistant", response)
+            st.session_state.conversation_closed = True
+            st.rerun()
+
         with st.chat_message("assistant"):
-            with st.spinner("Analyzing symptoms..."):
+            with st.spinner("Using LLM to analyze symptoms..."):
+                try:
+                    analysis = analyze_vision_symptoms(user_text)
 
-                if msg in greetings:
-                    response = (
-                        "Hi — I can help guide a blurry vision intake.\n\n"
-                        "To start, is the blur worse for **near (reading/close)** or **distance (far)**?"
-                    )
-                    st.markdown(response)
-                    add_message("assistant", response)
-                    st.rerun()
-
-                if any(t in msg for t in thanks):
-                    response = "You’re welcome. This conversation is now complete."
-                    st.markdown(response)
-                    add_message("assistant", response)
-                    st.session_state.conversation_closed = True
-                    st.rerun()
-
-                # Immediate red flags
-                if any(w in msg for w in ["pain", "flash", "flashes", "floater", "floaters", "sudden vision loss"]):
-                    response = result_card(
-                        "⚠️ Warning signs detected",
-                        "Urgent",
-                        "Pain, flashes, floaters, or sudden loss of vision can be associated with serious eye conditions.",
-                        "Seek urgent in-person eye care as soon as possible.",
-                        style="urgent"
-                    )
-                    st.markdown(response, unsafe_allow_html=True)
-                    add_message("assistant", response)
-                    st.session_state.conversation_closed = True
-                    st.session_state.stage = "idle"
-                    st.session_state.case = {"blur_type": None, "eye": None, "onset": None}
-                    st.rerun()
-
-                if st.session_state.stage == "idle":
-                    if "distance" in msg or "far" in msg:
-                        st.session_state.case["blur_type"] = "distance"
-                        st.session_state.stage = "ask_eye"
-                        response = "Got it. Is the blur affecting **one eye** or **both eyes**?"
-                        st.markdown(response)
-                        add_message("assistant", response)
-                        st.rerun()
-
-                    elif "near" in msg or "reading" in msg or "close" in msg:
-                        st.session_state.case["blur_type"] = "near"
-                        st.session_state.stage = "ask_eye"
-                        response = "Understood. Is the blur affecting **one eye** or **both eyes**?"
-                        st.markdown(response)
-                        add_message("assistant", response)
-                        st.rerun()
-
-                    else:
-                        response = (
-                            "I can guide you better if you tell me whether the blur is worse for "
-                            "**near** or **distance**."
-                        )
-                        st.markdown(response)
-                        add_message("assistant", response)
-                        st.rerun()
-
-                elif st.session_state.stage == "ask_eye":
-                    if "both" in msg:
-                        st.session_state.case["eye"] = "both eyes"
-                    elif "one" in msg or "left" in msg or "right" in msg:
-                        st.session_state.case["eye"] = "one eye"
-                    else:
-                        st.session_state.case["eye"] = "not sure"
-
-                    st.session_state.stage = "ask_onset"
-                    response = "Did the blur begin **suddenly** or **gradually**?"
-                    st.markdown(response)
-                    add_message("assistant", response)
-                    st.rerun()
-
-                elif st.session_state.stage == "ask_onset":
-                    if "grad" in msg:
-                        st.session_state.case["onset"] = "gradually"
-                    elif "sud" in msg:
-                        st.session_state.case["onset"] = "suddenly"
-                    else:
-                        st.session_state.case["onset"] = "not sure"
-
-                    blur_type = st.session_state.case["blur_type"]
-                    eye = st.session_state.case["eye"]
-                    onset = st.session_state.case["onset"]
-
-                    summary_html = f"""
-                    <div class="summary-card">
-                        <div class="summary-title">Captured intake summary</div>
-                        <div class="summary-line"><b>Blur type:</b> {blur_type}</div>
-                        <div class="summary-line"><b>Affected eye(s):</b> {eye}</div>
-                        <div class="summary-line"><b>Onset:</b> {onset}</div>
-                    </div>
-                    """
+                    summary_html = render_llm_summary(analysis)
                     st.markdown(summary_html, unsafe_allow_html=True)
                     add_message("assistant", summary_html)
 
-                    if onset == "suddenly":
+                    blur_type = analysis.get("blur_type", "unknown")
+                    onset = analysis.get("onset", "unknown")
+                    red_flags = analysis.get("red_flags", [])
+                    urgency = analysis.get("urgency", "routine")
+                    explanation = analysis.get("explanation", "This symptom should be reviewed by an eye care professional.")
+
+                    has_red_flag = (
+                        urgency == "urgent"
+                        or onset == "suddenly"
+                        or len(red_flags) > 0
+                    )
+
+                    if has_red_flag:
                         response = result_card(
-                            "⚠️ Sudden vision change",
+                            "⚠️ Urgent warning signs detected",
                             "Urgent",
-                            "A sudden change in vision is generally more concerning than gradual blur.",
-                            "Arrange prompt in-person eye evaluation.",
+                            explanation,
+                            "Seek urgent in-person eye care as soon as possible.",
                             style="urgent"
                         )
                     else:
-                        if blur_type == "distance" and eye == "both eyes":
-                            guidance = "This pattern can happen when a distance prescription needs updating."
-                        elif blur_type == "near":
-                            guidance = "This pattern may be related to focusing changes, near strain, or a need for reading correction."
-                        elif eye == "one eye":
-                            guidance = "Blur in one eye should still be checked carefully during an eye examination."
-                        else:
-                            guidance = "This pattern still deserves a routine eye exam for proper assessment."
-
                         response = result_card(
                             "✅ Educational guidance summary",
                             "Routine",
-                            guidance,
-                            "Schedule a routine eye exam. Seek urgent care if pain, flashes, floaters, or sudden worsening develops.",
+                            explanation,
+                            "Schedule a routine eye exam/refraction. Seek urgent care if pain, flashes, floaters, or sudden worsening develops.",
                             style="low"
                         )
 
@@ -622,13 +511,22 @@ with right_col:
                     add_message("assistant", response)
 
                     st.session_state.conversation_closed = True
-                    st.session_state.stage = "idle"
-                    st.session_state.case = {"blur_type": None, "eye": None, "onset": None}
+                    st.rerun()
+
+                except Exception as e:
+                    fallback = (
+                        "I could not complete the LLM analysis. "
+                        "Please check that your OpenAI API key is valid and billing is enabled.\n\n"
+                        f"Error: `{e}`"
+                    )
+                    st.error(fallback)
+                    add_message("assistant", fallback)
+                    st.session_state.conversation_closed = True
                     st.rerun()
 
     st.markdown("""
     <div class="footer-note">
-        Built with Streamlit for educational vision guidance
+        Built with Streamlit, OpenAI API, and deterministic safety guardrails
     </div>
     """, unsafe_allow_html=True)
 
