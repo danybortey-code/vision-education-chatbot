@@ -5,74 +5,82 @@ The Vision Education Chatbot is a Streamlit-based educational application that s
 
 The system combines:
 
-- **Large Language Models (LLMs)** for natural language understanding
-- **Deterministic safety guardrails** for urgent symptom detection
-- **Structured clinical reasoning**
-- **A modern Streamlit user interface**
+- Large Language Models (LLMs) for natural language understanding
+- Deterministic safety guardrails for urgent symptom detection
+- Structured clinical reasoning
+- A modern Streamlit user interface
 
-This project demonstrates how artificial intelligence can be used to build safe, explainable healthcare decision-support tools.
-
----
-
-## 🎯 Project Motivation
-
-Patients frequently describe vision problems using free text, such as:
-
-> “My distance vision has been blurry for a few weeks.”
-
-> “I suddenly noticed flashes and floaters in one eye.”
-
-Interpreting these descriptions requires extracting clinically relevant features such as:
-
-- Whether blur is worse at near or distance
-- Whether one or both eyes are affected
-- Whether symptoms began suddenly or gradually
-- Whether urgent warning signs are present
-
-This project automates that process using an LLM while preserving strict safety rules.
+This project demonstrates how generative AI can be used to build safe, explainable healthcare decision-support tools.
 
 ---
 
-## ❓ Problem Statement
+## Instructor Feedback Addressed
 
-Develop a healthcare chatbot that can:
+The initial prototype relied primarily on rule-based keyword matching to identify urgent symptoms. Based on instructor feedback, the project was refactored to integrate the OpenAI API, enabling the chatbot to use a Large Language Model (LLM) to interpret free-text symptom descriptions and extract structured clinical information while retaining deterministic safety guardrails.
 
-1. Accept free-text descriptions of blurry vision.
+---
+
+## Table of Contents
+
+1. Overview
+2. Problem Statement
+3. System Architecture
+4. High-Level Pipeline
+5. How the LLM Works
+6. Safety Guardrails
+7. Key Features
+8. Technology Stack
+9. Directory Overview
+10. Testing and Validation
+11. Installation
+12. Environment Variables
+13. Running the Application
+14. Example Use Cases
+15. Limitations
+16. Future Enhancements
+17. Learning Outcomes
+18. Author
+19. Disclaimer
+
+---
+
+## Overview
+
+Patients often describe symptoms in free text:
+
+> “My distance vision is blurry.”
+
+> “I suddenly noticed flashes and floaters.”
+
+The chatbot interprets these descriptions, extracts clinically relevant information, and provides educational next-step recommendations.
+
+---
+
+## Problem Statement
+
+Build an AI-powered educational chatbot that can:
+
+1. Accept natural language descriptions of blurry vision.
 2. Extract structured symptom information.
 3. Detect urgent red flags.
-4. Provide educational guidance.
-5. Recommend routine or urgent follow-up.
-6. Clearly communicate that the system is **not a medical diagnosis**.
+4. Recommend routine or urgent follow-up.
+5. Avoid making diagnoses.
 
 ---
 
-## 🧠 System Overview
-
-The application follows a hybrid architecture:
-
-1. **User enters symptoms in natural language**
-2. **LLM extracts structured clinical information**
-3. **Safety guardrails validate urgent symptoms**
-4. **Educational recommendations are generated**
-5. **Results are displayed in Streamlit**
-
-This design combines the flexibility of LLMs with the reliability of deterministic clinical safety logic.
-
----
-
-## 🏗️ System Architecture
+## System Architecture
 
 ```text
 User Input
     ↓
-Streamlit Interface (ui.py)
+Streamlit UI (ui.py)
     ↓
-LLM Symptom Extraction (llm_utils.py)
+OpenAI LLM (llm_utils.py)
     ↓
-Structured JSON Output
+Structured JSON Extraction
     ↓
 Safety Guardrails
     ↓
 Educational Recommendation
     ↓
-Rendered Clinical Summary
+Clinical Summary Display
