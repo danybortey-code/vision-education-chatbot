@@ -1,7 +1,7 @@
 # 👁️ Vision Education Chatbot
 ### An LLM-Powered Clinical Decision-Support Prototype for Blurry Vision Triage
 
-> A healthcare-focused generative AI application that interprets free-text descriptions of blurry vision, extracts structured clinical information, applies deterministic safety guardrails, and provides safe, non-diagnostic educational recommendations.
+> A healthcare-focused generative AI application that interprets free-text descriptions of blurry vision, extracts structured clinical information using a locally hosted Large Language Model, applies deterministic safety guardrails, and provides safe, non-diagnostic educational recommendations.
 
 ---
 
@@ -20,16 +20,15 @@
 11. Project Structure
 12. Prerequisites
 13. Installation
-14. Environment Setup
-15. Running the Application
-16. How to Use the Chatbot
-17. Testing and Validation
-18. Example Clinical Scenarios
-19. Limitations
-20. Future Enhancements
-21. Learning Outcomes
-22. Author
-23. Disclaimer
+14. Running the Application
+15. How to Use the Chatbot
+16. Testing and Validation
+17. Example Clinical Scenarios
+18. Limitations
+19. Future Enhancements
+20. Learning Outcomes
+21. Author
+22. Disclaimer
 
 ---
 
@@ -51,7 +50,7 @@ The system is intended for educational use only and does not provide medical dia
 
 ## Project Evolution
 
-The initial prototype relied primarily on deterministic keyword matching to identify urgent symptoms. The current version extends that prototype by integrating the OpenAI API, enabling the chatbot to use a Large Language Model (LLM) to interpret free-text symptom descriptions while preserving deterministic safety guardrails.
+The initial prototype relied primarily on deterministic keyword matching to identify urgent symptoms. The current version extends that prototype by integrating a locally hosted Large Language Model through Ollama, enabling the chatbot to interpret free-text symptom descriptions while preserving deterministic safety guardrails.
 
 ---
 
@@ -92,6 +91,10 @@ Streamlit Interface (ui.py)
     ↓
 LLM Symptom Extraction (llm_utils.py)
     ↓
+Ollama Local API
+    ↓
+Llama 3.2 Model
+    ↓
 Structured JSON Output
     ↓
 Safety Guardrails
@@ -99,268 +102,205 @@ Safety Guardrails
 Educational Recommendation
     ↓
 Clinical Summary Dashboard
-```
 
----
+How It Works
+Step 1 — Symptom Capture
 
-## How It Works
-
-### Step 1 — Symptom Capture
 The user describes their vision concern in natural language.
 
-### Step 2 — LLM-Based Interpretation
-The OpenAI API analyzes the message and extracts clinically relevant fields.
+Step 2 — LLM-Based Interpretation
 
-### Step 3 — Structured JSON Extraction
+A locally hosted Llama 3.2 model running through Ollama analyzes the message and extracts clinically relevant fields.
+
+Step 3 — Structured JSON Extraction
+
 The LLM returns a JSON object containing blur type, onset, red flags, urgency, and explanation.
 
-### Step 4 — Safety Validation
+Step 4 — Safety Validation
+
 Hard-coded rules ensure urgent symptoms always trigger escalation.
 
-### Step 5 — Recommendation Generation
-The system provides either:
-- Routine eye exam guidance, or
-- Urgent in-person eye care recommendation.
+Step 5 — Recommendation Generation
 
-### Step 6 — UI Rendering
+The system provides either:
+
+Routine eye exam guidance, or
+Urgent in-person eye care recommendation.
+Step 6 — UI Rendering
+
 Results are displayed in an interactive Streamlit dashboard.
 
----
+How the LLM Works
 
-## How the LLM Works
+The llm_utils.py module sends the user's symptom description to the local Ollama API (http://localhost:11434/api/generate) and requests structured JSON output from the llama3.2 model.
 
-The `llm_utils.py` module sends the user's symptom description to the OpenAI API and requests structured JSON output.
-
-### Example Input
-
-```text
+Example Input
 My distance vision is blurry and I see flashes.
-```
-
-### Example Output
-
-```json
+Example Output
 {
   "blur_type": "distance",
-  "eye": "unknown",
-  "onset": "unknown",
+  "eye": "both",
+  "onset": "gradually",
   "red_flags": ["flashes"],
   "urgency": "urgent",
   "explanation": "Flashes can be a warning sign and should be evaluated urgently."
 }
-```
+Extracted Fields
+Field	Description
+blur_type	near, distance, both, unknown
+eye	one eye, both eyes, unknown
+onset	suddenly, gradually, unknown
+red_flags	pain, flashes, floaters
+urgency	routine or urgent
+explanation	Plain-language educational explanation
+Key Design Decisions
+Hybrid AI Architecture
 
-### Extracted Fields
-
-| Field | Description |
-|------|------|
-| `blur_type` | near, distance, both, unknown |
-| `eye` | one eye, both eyes, unknown |
-| `onset` | suddenly, gradually, unknown |
-| `red_flags` | pain, flashes, floaters |
-| `urgency` | routine or urgent |
-| `explanation` | Plain-language educational explanation |
-
----
-
-## Key Design Decisions
-
-### Hybrid AI Architecture
 The application combines probabilistic LLM reasoning with deterministic safety rules.
 
-### Structured JSON Output
+Structured JSON Output
+
 The LLM is constrained to return machine-readable JSON for transparency and downstream processing.
 
-### Safety-First Approach
+Safety-First Approach
+
 Urgent symptoms always override the model output.
 
-### Secure Credential Management
-API keys are stored in a `.env` file and excluded from GitHub.
+Local Inference
 
-### Synthetic Test Data
+The application uses Ollama to run the Llama 3.2 model locally, eliminating API costs and protecting user privacy.
+
+Synthetic Test Data
+
 Validation uses non-identifiable synthetic cases rather than real patient data.
 
-### Modular Design
-The interface (`ui.py`) and LLM logic (`llm_utils.py`) are separated for maintainability.
+Modular Design
 
----
+The interface (ui.py) and LLM logic (llm_utils.py) are separated for maintainability.
 
-## Key Features
-
-- OpenAI-powered natural language symptom interpretation
-- Structured clinical information extraction
-- Deterministic safety guardrails
-- Modern Streamlit user interface
-- Consent gate and educational disclaimer
-- Synthetic test dataset (`test_cases.csv`)
-- Standalone LLM testing script (`test_llm.py`)
-- Secure API key management
-- Public GitHub repository
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|------|------|
-| Frontend | Streamlit |
-| LLM API | OpenAI Python SDK |
-| Prompt Engineering | Structured JSON extraction |
-| Environment Variables | python-dotenv |
-| Testing | Synthetic CSV + standalone Python scripts |
-| Version Control | Git & GitHub |
-| Language | Python 3 |
-
----
-
-## Project Structure
-
-```text
+Key Features
+Ollama-powered natural language symptom interpretation
+Locally hosted Llama 3.2 model
+Structured clinical information extraction
+Deterministic safety guardrails
+Modern Streamlit user interface
+Consent gate and educational disclaimer
+Synthetic test dataset (test_cases.csv)
+Standalone LLM testing script (test_llm.py)
+Public GitHub repository
+Tech Stack
+Component	Technology
+Frontend	Streamlit
+LLM Runtime	Ollama
+Model	Llama 3.2
+API Interface	Local REST API (requests)
+Prompt Engineering	Structured JSON extraction
+Testing	Synthetic CSV + standalone Python scripts
+Version Control	Git & GitHub
+Language	Python 3
+Project Structure
 vision-education-chatbot/
 ├── ui.py                # Streamlit application
-├── llm_utils.py         # OpenAI API integration
+├── llm_utils.py         # Ollama integration
 ├── test_llm.py          # LLM validation script
 ├── test_cases.csv       # Synthetic test cases
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
-└── .env                # API key (not committed)
-```
-
----
-
-## Prerequisites
+└── screenshots/        # Optional UI screenshots
+Prerequisites
 
 Before running the project, ensure you have:
 
-- Python 3.10 or later
-- An OpenAI API key
-- Git (optional, for cloning the repository)
-- Internet connection for API access
+Python 3.10 or later
+Ollama installed
+The llama3.2 model downloaded
+Git (optional, for cloning the repository)
+Install Ollama
 
----
+Download and install Ollama from:
 
-## Installation
+https://ollama.com
 
-```bash
+Download the Model
+ollama pull llama3.2
+Installation
 git clone https://github.com/danybortey-code/vision-education-chatbot.git
 cd vision-education-chatbot
 pip install -r requirements.txt
-```
+Running the Application
+Start Ollama
 
----
+Ensure the Ollama service is running.
 
-## Environment Setup
-
-Create a `.env` file in the project root:
-
-```text
-OPENAI_API_KEY=your_api_key_here
-```
-
----
-
-## Running the Application
-
-```bash
+Launch Streamlit
 streamlit run ui.py
-```
 
 The application will launch in your browser at:
 
-```text
 http://localhost:8501
-```
 
----
+How to Use the Chatbot
+Launch the Streamlit application.
+Review and accept the educational disclaimer.
+Describe your vision symptoms in natural language.
+Review the extracted clinical summary.
+Read the educational recommendation.
+Start a new chat to analyze another case.
+Example Prompts
+“My near vision is blurry when reading.”
+“I suddenly noticed flashes and floaters.”
+“My right eye hurts and my vision is blurry.”
+Testing and Validation
+Synthetic Test Dataset
 
-## How to Use the Chatbot
+test_cases.csv contains representative symptom scenarios, including:
 
-1. Launch the Streamlit application.
-2. Review and accept the educational disclaimer.
-3. Describe your vision symptoms in natural language.
-4. Review the extracted clinical summary.
-5. Read the educational recommendation.
-6. Start a new chat to analyze another case.
-
-### Example Prompts
-
-- “My near vision is blurry when reading.”
-- “I suddenly noticed flashes and floaters.”
-- “My right eye hurts and my vision is blurry.”
-
----
-
-## Testing and Validation
-
-### Synthetic Test Dataset
-`test_cases.csv` contains representative symptom scenarios, including:
-
-- Routine refractive blur
-- Eye pain
-- Flashes and floaters
-- Sudden onset blur
-- Greetings and edge cases
-
-### Standalone LLM Test
-
-```bash
+Routine refractive blur
+Eye pain
+Flashes and floaters
+Sudden onset blur
+Greetings and edge cases
+Standalone LLM Test
 python test_llm.py
-```
 
-This verifies that the LLM returns valid structured JSON.
+This verifies that the local Llama 3.2 model returns valid structured JSON.
 
----
+Example Clinical Scenarios
+Routine Case
 
-## Example Clinical Scenarios
+Input: “My near vision is blurry when reading.”
 
-### Routine Case
-**Input:** “My near vision is blurry when reading.”
+Recommendation: Schedule a routine eye examination.
 
-**Recommendation:** Schedule a routine eye examination.
+Urgent Case
 
-### Urgent Case
-**Input:** “I suddenly noticed flashes and floaters.”
+Input: “I suddenly noticed flashes and floaters.”
 
-**Recommendation:** Seek urgent in-person eye care.
+Recommendation: Seek urgent in-person eye care.
 
----
 
-## Limitations
-
-- Intended for educational purposes only
-- Not a diagnostic tool
-- Limited to blurry vision symptom triage
-- Requires an OpenAI API key
-- Does not analyze images or diagnostic reports
-
----
-
-## Future Enhancements
-
-- Retrieval-Augmented Generation (RAG) with ophthalmology references
-- Voice input
-- OCT report interpretation
-- Visual field analysis
-- Multimodal image uploads
-- Automated evaluation metrics
-
----
-
-## Learning Outcomes
+Future Enhancements
+Retrieval-Augmented Generation (RAG) with ophthalmology references
+Voice input
+OCT report interpretation
+Visual field analysis
+Multimodal image uploads
+Automated evaluation metrics
+Learning Outcomes
 
 This project provided hands-on experience in:
 
-- LLM integration using the OpenAI API
-- Prompt engineering for structured outputs
-- Safety-aware healthcare AI design
-- Streamlit application development
-- Secure secret management
-- Professional project documentation
-
----
+LLM integration using Ollama and Llama 3.2
+Prompt engineering for structured outputs
+Safety-aware healthcare AI design
+Streamlit application development
+Building local AI applications
+Professional project documentation
 
 
-## Disclaimer
+GitHub: https://github.com/danybortey-code
+Project Repository: https://github.com/danybortey-code/vision-education-chatbot
+Disclaimer
 
 This application is intended solely for educational purposes and should not be used as a substitute for professional medical advice, diagnosis, or treatment.
