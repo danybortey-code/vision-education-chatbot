@@ -114,25 +114,37 @@ A locally hosted Llama 3.2 model running through Ollama analyzes the message and
 
 Step 3 — Structured JSON Extraction
 
-The LLM returns a JSON object containing blur type, onset, red flags, urgency, and explanation.
+The LLM returns a JSON object containing:
+
+blur_type
+eye
+onset
+red_flags
+urgency
+explanation
 
 Step 4 — Safety Validation
 
-Hard-coded rules ensure urgent symptoms always trigger escalation.
+Deterministic guardrails ensure that symptoms such as pain, flashes, floaters, and sudden vision changes always trigger urgent recommendations.
 
 Step 5 — Recommendation Generation
 
 The system provides either:
 
-Routine eye exam guidance, or
-Urgent in-person eye care recommendation.
-Step 6 — UI Rendering
+✅ Routine eye exam guidance
+🚨 Urgent in-person eye care recommendation
 
-Results are displayed in an interactive Streamlit dashboard.
+Step 6 — Interactive Display
+
+Results are rendered in a polished Streamlit dashboard with a clinical summary and educational explanation.
 
 How the LLM Works
 
-The llm_utils.py module sends the user's symptom description to the local Ollama API (http://localhost:11434/api/generate) and requests structured JSON output from the llama3.2 model.
+The llm_utils.py module sends the user's symptom description to the local Ollama API:
+
+http://localhost:11434/api/generate
+
+The llama3.2 model is instructed to return structured JSON output.
 
 Example Input
 My distance vision is blurry and I see flashes.
@@ -156,38 +168,39 @@ explanation	Plain-language educational explanation
 Key Design Decisions
 Hybrid AI Architecture
 
-The application combines probabilistic LLM reasoning with deterministic safety rules.
+Combines probabilistic LLM reasoning with deterministic safety rules.
 
 Structured JSON Output
 
-The LLM is constrained to return machine-readable JSON for transparency and downstream processing.
+Constrains the model to return machine-readable data for transparency and downstream processing.
 
 Safety-First Approach
 
-Urgent symptoms always override the model output.
+Urgent symptoms always override the LLM's recommendation.
 
-Local Inference
+Local Inference with Ollama
 
-The application uses Ollama to run the Llama 3.2 model locally, eliminating API costs and protecting user privacy.
+Runs entirely on the local machine, eliminating API costs and improving privacy.
 
 Synthetic Test Data
 
-Validation uses non-identifiable synthetic cases rather than real patient data.
+Uses non-identifiable simulated cases instead of real patient information.
 
 Modular Design
 
-The interface (ui.py) and LLM logic (llm_utils.py) are separated for maintainability.
+Separates the user interface (ui.py) from the LLM logic (llm_utils.py) for maintainability.
 
 Key Features
-Ollama-powered natural language symptom interpretation
-Locally hosted Llama 3.2 model
-Structured clinical information extraction
-Deterministic safety guardrails
-Modern Streamlit user interface
-Consent gate and educational disclaimer
-Synthetic test dataset (test_cases.csv)
-Standalone LLM testing script (test_llm.py)
-Public GitHub repository
+🤖 Ollama-powered natural language symptom interpretation
+🧠 Locally hosted Llama 3.2 model
+📊 Structured clinical information extraction
+🛡️ Deterministic safety guardrails
+💬 Modern Streamlit user interface
+✅ Consent gate and educational disclaimer
+🧪 Synthetic test dataset (test_cases.csv)
+🔍 Standalone LLM testing script (test_llm.py)
+🌐 Public GitHub repository
+
 Tech Stack
 Component	Technology
 Frontend	Streamlit
@@ -198,6 +211,7 @@ Prompt Engineering	Structured JSON extraction
 Testing	Synthetic CSV + standalone Python scripts
 Version Control	Git & GitHub
 Language	Python 3
+
 Project Structure
 vision-education-chatbot/
 ├── ui.py                # Streamlit application
@@ -207,7 +221,8 @@ vision-education-chatbot/
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
-└── screenshots/        # Optional UI screenshots
+└── screenshots/         # Optional UI screenshots
+
 Prerequisites
 
 Before running the project, ensure you have:
@@ -228,16 +243,15 @@ Installation
 git clone https://github.com/danybortey-code/vision-education-chatbot.git
 cd vision-education-chatbot
 pip install -r requirements.txt
+
 Running the Application
-Start Ollama
+1. Start Ollama
 
 Ensure the Ollama service is running.
 
-Launch Streamlit
+2. Launch Streamlit
 streamlit run ui.py
-
-The application will launch in your browser at:
-
+3. Open in Browser
 http://localhost:8501
 
 How to Use the Chatbot
@@ -279,7 +293,6 @@ Input: “I suddenly noticed flashes and floaters.”
 
 Recommendation: Seek urgent in-person eye care.
 
-
 Future Enhancements
 Retrieval-Augmented Generation (RAG) with ophthalmology references
 Voice input
@@ -287,6 +300,7 @@ OCT report interpretation
 Visual field analysis
 Multimodal image uploads
 Automated evaluation metrics
+
 Learning Outcomes
 
 This project provided hands-on experience in:
