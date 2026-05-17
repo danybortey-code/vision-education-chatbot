@@ -1,44 +1,37 @@
-import os
 import json
-from dotenv import load_dotenv
-from openai import OpenAI
-
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+import requests
 
 
-def analyze_vision_symptoms(user_message):
+def analyze_vision_symptoms(user_text):
     prompt = f"""
-Analyze this vision-related message and return ONLY valid JSON.
+You are an ophthalmic triage assistant.
 
-Message:
-"{user_message}"
+Analyze the patient's symptom description and return ONLY valid JSON.
 
-JSON format:
-{{
-  "blur_type": "near, distance, both, or unknown",
-  "eye": "one eye, both eyes, or unknown",
-  "onset": "suddenly, gradually, or unknown",
-  "red_flags": [],
-  "urgency": "routine or urgent",
-  "explanation": "brief educational explanation"
-}}
+Extract the following fields:
+- blur_type: near, distance, both, or unknown
+- eye: one eye, both eyes, or unknown
+- onset: suddenly, gradually, or unknown
+- red_flags: list containing any of [pain, flashes, floaters]
+- urgency: routine or urgent
+- explanation: brief educational explanation
 
-Rules:
-- If pain, flashes, floaters, or sudden vision change are present, urgency must be urgent.
-- Do not diagnose.
-- Do not prescribe.
+Patient description:
+{user_text}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {"role": "system", "content": "You are a cautious eye-care education assistant. Return only valid JSON."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "llama3.2",
+            "prompt": prompt,
+            "stream": False,
+            "format": "json"
+        },
+        timeout=120
     )
 
-    content = response.choices[0].message.content
-    return json.loads(content)
+    response.raise_for_status()
+
+    result = response.json()
+    return json.loads(result["response"])
