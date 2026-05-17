@@ -403,13 +403,6 @@ This project provided hands-on experience in:
 
 ---
 
-## Author
-
-**Daniel Bortey, OD**  
-MS in Data Science Candidate, University of Connecticut
-
-- GitHub: https://github.com/danybortey-code
-- Project Repository: https://github.com/danybortey-code/vision-education-chatbot
 
 ---
 
