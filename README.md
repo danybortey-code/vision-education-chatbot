@@ -369,16 +369,6 @@ This verifies that the local Llama 3.2 model returns valid structured JSON.
 
 ---
 
-## Limitations
-
-- Intended for educational purposes only
-- Not a diagnostic tool
-- Limited to blurry vision symptom triage
-- Requires Ollama and the `llama3.2` model to be installed locally
-- Does not analyze images or diagnostic reports
-
----
-
 ## Future Enhancements
 
 - Retrieval-Augmented Generation (RAG) with ophthalmology references
@@ -401,7 +391,6 @@ This project provided hands-on experience in:
 - Building local AI applications
 - Professional project documentation
 
----
 
 
 ---
